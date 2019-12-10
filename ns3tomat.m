@@ -3,12 +3,12 @@
 
 % .csv file with a list of all the folders to be checked for .ns3 to .mat
 % file conversion
-x = csvread('/Users/bsevak/Documents/Book3convert.csv');
-x = num2str(x);
-len = 1;
-while len <= length(x)
-    disp([x(len,1:8),'-', x(len,9:end)]);
-    cd(['/Volumes/EPILEPSY/BF/Data folders/',x(len,1:8),'-',x(len,9:end)])
+x = readtable('/Users/bsevak/Documents/FilesToConvert.xlsx');
+
+len = 33;
+while len <= length(x.Folder)
+    disp(char(x.Folder(len)));
+    cd(['/Volumes/EPILEPSY/BF/Data folders/',char(x.Folder(len))])
     %cd(['/Volumes/EPILEPSY/BF/Data folders/20150722-120659'])
 
     % Obtaining all the files with .ns3 extension
@@ -35,6 +35,6 @@ while len <= length(x)
         end
         save([filename_ns3(:,51:end-4) '_resampled_200Hz.mat'], 'data_resampled', 'original_Fs', 'resampled_Fs', 'header_ns3','headerinfo', '-mat'),
     end
-    f = msgbox('Converted and saved the file after sampling');
+    
     len = len + 1;
 end

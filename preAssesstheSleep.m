@@ -4,14 +4,18 @@
 %for p = 7%:length(x.Patient)
 
 
-Patient = 'Patient_7' %char(x.Patient(p));
-Night = 'Night_1_1'%char(x.Night(p));
+Patient = 'Patient_8' %char(x.Patient(p));
+Night = 'Night_7'%char(x.Night(p));
 
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
 load([Patient,'_',Night,'_200Hz_resampled.mat']);
 
 % Setting Parameters according to the Assess the Sleep algorithm
-Data = merged_matfile';
+if exist('merged_matfile')
+    Data = merged_matfile';
+elseif exist('file_new')
+    Data = file_new';
+end
 
 El_number = double(1:length(Data(:,1)));
 El_name = {header_ns3(:).Label};

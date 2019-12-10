@@ -300,6 +300,12 @@ plot(find(Db<prctile(Db,DbcritAW)),Db(find(Db<prctile(Db,DbcritAW))),...
 plot(find(Db>prctile(Db,DbcritSWS)),Db(find(Db>prctile(Db,DbcritSWS))),...
     'ko', 'MarkerSize', 5, 'MarkerFaceColor', 'k');
 
+% Saving the event markers for wake and sleep
+classifier_marker = [];
+classifier_marker.wake_events = find(Db<prctile(Db,DbcritAW));
+classifier_marker.sleep_events = find(Db>prctile(Db,DbcritSWS));
+save('classifier_marker.mat','classifier_marker','Db');
+
 xlim([0 length(max_plot)]);
 title(sprintf('%s over %s', ...
     feature_struct.features_key{what_feat_plot(4)}, feature_struct.features_key{what_feat_plot(end)}));
