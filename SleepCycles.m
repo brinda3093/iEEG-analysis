@@ -1,35 +1,37 @@
-% Once night is selected, let's do these steps:
+%% Assessing Sleep, Selecting Cycles to be analyzed, Calculating FFT
+ 
+%% Step 1.1
+% Import the data to remove the bad sections of the data
 
-%%
-% Import in EEGlab
+eeglab;
 
-% there you do command line or gui, as you like - need to have only 1
-% variable in .mat file for GUI to work
+Patient = 'Patient_2';
+Night = 'Night_2';
+pID = 'P2';
+nID = 'N2';
 
-eeglab
-
-
-%%
-% take out bad channels - plotter will automatically save bad channels you mask out in EEG
-% structure in workspace but not on computer
-
-EEG = csc_eeg_plotter(EEG);
-
-EEG = pop_saveset(EEG, 'filename', EEG.filename);
-
-EEG = pop_select(EEG, 'nochannel', EEG.csc_hidden_channels );
-
-EEG = pop_saveset(EEG, 'filename', strcat([EEG.filename(1:end-4) '_nobadchan.set']));
+filename = [pID,nID];
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/']);
+load([Patient,'/',Night,'/',Patient,'_',Night,'_Transpose.mat']);
+EEG = pop_importdata([Patient,'/',Night,'/',Patient,'_',Night,'_Transpose.mat']);
+fs = 200;
+EEG.data = EEGdata;
+EEG = pop_editset(EEG, 'srate',fs); 
 
 
-%%
-% take out bad epochs
+
+EEG.filename = filename;
+
+%% Step 1.2
+% Filtering the data 
+
 
 LOW_CUTOFF = 0.5;
-HIGH_CUTOFF = 40;
+HIGH_CUTOFF = [];
 
-EEG1 = pop_eegfiltnew(EEG, LOW_CUTOFF, HIGH_CUTOFF, [], 0, [], 0)
+EEG1 = pop_eegfiltnew(EEG, LOW_CUTOFF, HIGH_CUTOFF, [], 0, [], 0);
 
+%
 eegplot(EEG1.data,...
   'srate', EEG1.srate,...
   'eloc_file', EEG1.chanlocs,...
@@ -40,46 +42,104 @@ eegplot(EEG1.data,...
   'butlabel', 'MARK', ...
   'events', EEG1.event);
 
-% eegplot will now save the stretches to be rejected in a workspace
-% variable called TMPREJ. 
-
-% Remove the marked stretches
-% EEG = epi_log(@pop_select, EEG, 'nopoint', [120*EEG.srate, EEG.pnts]);
 EEG = epi_log(@pop_select, EEG1, 'nopoint', TMPREJ(:,1:2));
 
-%Let's keep in mind what we removed
 EEG.removed_stretches = TMPREJ(:,1:2);
 
+EEG = pop_saveset(EEG, 'filename', strcat([EEG.filename '_HP_nobadstr.set']));
+save([pID,nID,'_data_assess_sleep.mat'],'EEG');
 
-EEG = pop_saveset(EEG, 'filename', strcat([EEG.filename(1:end-4) '_HP_nobadstr.set']));
+load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/',Patient,'_',Night,'_200Hz_resampled.mat']);
 
-%%
-% run classifier again
-% using popp_select, select 1st and last cycles as the epoch from 1st to
-% last black dot marked by classifier
-Assess_the_sleep_modified()
-global db_extracted;
+Data = double(EEG.data);
+El_number = double(1:length(Data(:,1)));
+El_name = {header_ns3(:).Label};
+
+fs = 200;
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/',pID,nID]);
+save([pID,nID,'_data.mat'],'Data','El_number','El_name','fs','-v7.3');
+
+
+%% Step 2
+
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
+global subject_id z;
+subject_id  = {[pID,nID]};
+z = 1;
+
+Assess_the_sleep_NST();
+global Db;
 db_sleep = [];
 db_sleep_x = [];
 db_wake = [];
 db_wake_x = [];
-for i = 1:length(db_extracted)
-    if (db_extracted(i) > prctile(db_extracted,90))
-        db_sleep = [db_sleep db_extracted(i)];
+for i = 1:length(Db)
+    if (Db(i) > prctile(Db,90))
+        db_sleep = [db_sleep Db(i)];
         db_sleep_x = [db_sleep_x i];
-    elseif (db_extracted(i) < prctile(db_extracted, 5))
-        db_wake = [db_wake db_extracted(i)];
+    elseif (Db(i) < prctile(Db, 5))
+        db_wake = [db_wake Db(i)];
         db_wake_x = [db_wake_x i];
     end
 end
 
+save(['Db_',pID,nID,'.mat'],'Db');
+
+%% Select the valid night for sleep from the Delta Beta ratio on the EEGLAB
+
+eeglab;
+
+EEG = pop_importdata(['Db_',pID,nID,'.mat']);
+EEG.srate = 200;
+EEG.data = Db;
+
+eegplot(EEG.data,...
+  'srate', EEG.srate,...
+  'eloc_file', EEG.chanlocs,...
+  'spacing', 110,...
+  'winlength', 120,...
+  'dispchans', EEG.nbchan,...
+  'command', 'disp(''No data rejected. Use pop_select for this.'')',...
+  'butlabel', 'MARK', ...
+  'events', EEG.event);
 
 
+EEG = epi_log(@pop_select, EEG, 'nopoint', TMPREJ(:,1:2));
+EEG.removed_stretches = TMPREJ(:,1:2);
 
-EEG_cycle = pop_select(EEG, 'time', [db_sleep_x(1)*30 db_sleep_x(end)*30]);
-EEG_fft = pop_saveset(EEG_cycle, 'filename', strcat('C1_0710_fft.set'));
+DBVals_sleep = EEG.data;
+
+save(['DBVals_sleep',pID,nID,'.mat'],'DBVals_sleep'); %
+%% Finding the epochs to be considered for the FFT Calculation
+
+Db_sin = single(Db);
+
+sleep_epoch = [];
+
+for k = 1:length(DBVals_sleep)
+    for l = 1:length(Db_sin)
+        if Db_sin(l) == DBVals_sleep(k)
+            sleep_epoch = [sleep_epoch, l];
+        end
+    end
+end
+
+%% Data for FFT Calculation
+
+load([pID,nID,'_data_assess_sleep.mat']);
+
+Data = EEG.data;
+data_fft = Data(:,sleep_epoch(3)*30*200:sleep_epoch(end)*30*200);
+
+save([pID,nID,'sleep_data_fft.mat'],'data_fft');
+
+eeglab;
+EEG = pop_importdata([pID,nID,'sleep_data_fft.mat']);
+EEG.data = data_fft;
+EEG.srate = 200; %Sampling rate
 
 
+EEG = pop_saveset(EEG, 'filename', [pID,nID,'_sleepData']);
 %%
 % FFT time course - overview
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,6 +215,8 @@ good_epochs_thresholds = calculate_data_saved_thresholds(fft_bands          , ..
 % "plot the spectra"
 Spectra_Plotter(fft_all, good_epochs, options);
 
-save([filtered_file(1:end-4) '_fft_wholedata.mat'], 'fft_all', 'fft_bands', 'fft_HF_slided', 'fft_SWA_slided', 'fft_HF_threshold', 'fft_SWA_threshold', 'options', 'freq_range', 'good_epochs' , 'good_epochs_thresholds', 'filtered_file' , '-mat', '-v7.3');
+save([filtered_file(1:end-4) '_fft_wholedata.mat'], 'fft_all', 'fft_bands',... %'fft_HF_slided', 'fft_SWA_slided', 
+    'fft_HF_threshold', 'fft_SWA_threshold', 'options', 'freq_range',... %'good_epochs' ,
+    'good_epochs_thresholds', 'filtered_file' , '-mat', '-v7.3');
 
 

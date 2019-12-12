@@ -1,7 +1,7 @@
 
 x = readtable('/Users/bsevak/Documents/mergeFiles.xlsx');
 
-for filedet = 34:length(x.File)
+for filedet = 1:length(x.File)
     pathP = (['/Volumes/EPILEPSY/BF/Data folders/',char(x.File(filedet)),'/']);
 cd(pathP);
 merged_matfile = [];

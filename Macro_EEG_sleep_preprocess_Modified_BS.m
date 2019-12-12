@@ -81,10 +81,10 @@ fs = 200;
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/',Patient,'_',Night]);
 save([Patient,'_',Night,'_data.mat'],'Data','El_number','El_name','fs','-v7.3');
 
-
+sleep_cycle = pop_select(EEG);
 
 EEG_cycle = pop_select(EEG, 'time', [db_sleep_x(1)*30 db_sleep_x(end)*30]);
-EEG_fft = pop_saveset(EEG_cycle, 'filename', strcat('C1_0710_fft.set'));
+EEG_fft = pop_saveset(sleep_cycle, 'filename', strcat('P1N1.set'));
 
 
 %%

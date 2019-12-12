@@ -103,19 +103,34 @@
 % 61?70. https://doi.org/10.1016/j.jneumeth.2019.01.013
 
 %%
-function [] = Assess_the_sleep()
+function [] = Assess_the_sleep_modified()
 global SelectedEpochs time_axes Gold_Standard_Score hPlot ...
-what_feat_plot median_feat feature_struct z i subject_id hFig Db
+what_feat_plot median_feat feature_struct i subject_id hFig
 
 SelectedEpochs = []; % vector for selected epoch to score manually
 Gold_Standard_Score = []; % vector to hold gold standard scoring
 hPlot = []; % handler of plot
 
+% workaround for subject_id global variable
+file_path = cd;
+subject_id = sprintf(file_path(:, end-14:end));
+
 %% if no features were calculated (no .mat file), load the data file with data, extract features, save features
-if ~isfile(sprintf('%s%s%s%s%s_feature_struct.mat', cd, filesep, subject_id{z}, filesep, subject_id{z}))
+if ~isfile(sprintf('%s%s%s_feature_struct.mat', cd, filesep, subject_id))
     % load the data from folder subject_id/subject_id
     fprintf('\nLoading the data... ')
-    load(sprintf('%s%s%s%s%s_data.mat', cd, filesep, subject_id{z}, filesep, subject_id{z}));
+    filename_merged = swa_getFiles(pwd, '_merged.mat');
+    load(filename_merged{1});
+    Data = merged_matfile;
+    El_name = channel_map;  % loaded in from modified Columbia sleep scoring script
+    El_number = 1:length(Data(:,1));  % "
+    fs = resampled_Fs;  % "
+    
+    % In case of preexisting merged matfiles use these instead (those not generated w/ modified columbia script)
+    %fs = 200;
+    %El_name = string(El_number)
+    
+    % load(sprintf('%s%s%s_data.mat', cd, filesep, subject_id));
     fprintf('Done.\n');
 
     fsamp_new = 64; % downsample to 64 Hz
@@ -197,8 +212,8 @@ if ~isfile(sprintf('%s%s%s%s%s_feature_struct.mat', cd, filesep, subject_id{z}, 
         all_ha(2).YGrid = 'on';
 
         % print images
-        dest = [cd filesep subject_id{z} filesep];
-        saveas(hFig,sprintf('%s%s%s_ToSelectElectrode_%s.png', dest, filesep, num2str(subject_id{z}), num2str(El_number(j))));
+        dest = [cd filesep ];
+        saveas(hFig,sprintf('%s%s_ToSelectElectrode_%s.png', dest, num2str(subject_id), El_name{j}));
         close(hFig);
 
         % save to variable matrix
@@ -223,11 +238,11 @@ if ~isfile(sprintf('%s%s%s%s%s_feature_struct.mat', cd, filesep, subject_id{z}, 
 
 
     %% save the calculated features for future use
-    dest = [cd filesep subject_id{z} filesep];
-    save(strcat(dest, subject_id{z}, '_feature_struct.mat'), 'feature_struct', '-v7.3');
+    dest = [cd filesep];
+    save(strcat(dest, subject_id, '_feature_struct.mat'), 'feature_struct', '-v7.3');
 else
     % load the data from folder subject_id/subject_id
-    load(sprintf('%s%s%s%s%s_feature_struct.mat', cd, filesep, subject_id{z}, filesep, subject_id{z}));
+    load(sprintf('%s%s%s_feature_struct.mat', cd, filesep, subject_id));
 end
 
 
@@ -300,12 +315,6 @@ plot(find(Db<prctile(Db,DbcritAW)),Db(find(Db<prctile(Db,DbcritAW))),...
 plot(find(Db>prctile(Db,DbcritSWS)),Db(find(Db>prctile(Db,DbcritSWS))),...
     'ko', 'MarkerSize', 5, 'MarkerFaceColor', 'k');
 
-% Saving the event markers for wake and sleep
-classifier_marker = [];
-classifier_marker.wake_events = find(Db<prctile(Db,DbcritAW));
-classifier_marker.sleep_events = find(Db>prctile(Db,DbcritSWS));
-save('classifier_marker.mat','classifier_marker','Db');
-
 xlim([0 length(max_plot)]);
 title(sprintf('%s over %s', ...
     feature_struct.features_key{what_feat_plot(4)}, feature_struct.features_key{what_feat_plot(end)}));
@@ -313,23 +322,22 @@ set(gca,'Xticklabel',[])
 set(gcf, 'WindowButtonDownFcn', @getMousePositionOnImage); % define mouse click callback
 
 % plot hypnogram if available
-% subplot(3+length(what_feat_plot)+1,1,i+2);
-% plot(feature_struct.stage(1:fs*30:end), 'LineWidth', 3);
-% xlim([0 length(feature_struct.stage(1:fs*30:end))]);
-% title('Gold Standard Sleep Stage (if available)');
-% yticks(find(~strcmp(feature_struct.stage_key,'N/A')));
-% yticklabels(feature_struct.stage_key(~strcmp(feature_struct.stage_key,'N/A')));
+subplot(3+length(what_feat_plot)+1,1,i+2);
+plot(feature_struct.stage(1:fs*30:end), 'LineWidth', 3);
+xlim([0 length(feature_struct.stage(1:fs*30:end))]);
+title('Gold Standard Sleep Stage (if available)');
+yticks(find(~strcmp(feature_struct.stage_key,'N/A')));
+yticklabels(feature_struct.stage_key(~strcmp(feature_struct.stage_key,'N/A')));
 
 all_ha = findobj(hFig  , 'type', 'axes', 'tag', '' );
 %linkaxes( all_ha, 'x' );
 for j = 1:length(all_ha)
     all_ha(j).YGrid = 'on'; % turn on Y-Grids
 end
-saveas(hFig , 'FullNight.png','png');
-close(hFig);
+
 % wait till user closes the figure
-% waitfor(hFig);
-disp(sprintf('\nFinished scoring for patient number: %s\n', subject_id{z}));
+waitfor(hFig);
+disp(sprintf('\nFinished scoring for patient number: %s\n', subject_id));
 
 end
 
@@ -345,8 +353,8 @@ if strcmp(evt.Character, 's')
         case 'Yes'
             % save variables
             h_msgbox = msgbox('Saving Scores');
-            dest = [cd filesep subject_id{z} filesep];
-            save(strcat(dest, subject_id{z}, '_Sleep_Scoring.mat'), 'Gold_Standard_Score', '-v7.3');
+            dest = [cd filesep subject_id filesep];
+            save(strcat(dest, subject_id, '_Sleep_Scoring.mat'), 'Gold_Standard_Score', '-v7.3');
             close(h_msgbox);
             return;
         case 'No'
@@ -361,14 +369,14 @@ elseif strcmp(evt.Character, 'q')
         case 'Yes'
             % save variables
             h_msgbox = msgbox('Saving Scores');
-            dest = [cd filesep subject_id{z} filesep];
-            save(strcat(dest, subject_id{z}, '_Sleep_Scoring.mat'), 'Gold_Standard_Score', '-v7.3');
+            dest = [cd filesep subject_id filesep];
+            save(strcat(dest, subject_id, '_Sleep_Scoring.mat'), 'Gold_Standard_Score', '-v7.3');
             close(h_msgbox);
 
             % print images
-            dest = [cd filesep subject_id{z} filesep];
-            saveas(hFig,sprintf('%s%s%s_Median_Spectra_features_and_Sleep_Stages.png', dest, filesep, num2str(subject_id{z})));
-            savefig(hFig,sprintf('%s%s%s_Median_Spectra_features_and_Sleep_Stages.fig', dest, filesep, num2str(subject_id{z})));
+            dest = [cd filesep subject_id filesep];
+            saveas(hFig,sprintf('%s%s%s_Median_Spectra_features_and_Sleep_Stages.png', dest, filesep, num2str(subject_id)));
+            savefig(hFig,sprintf('%s%s%s_Median_Spectra_features_and_Sleep_Stages.fig', dest, filesep, num2str(subject_id)));
 
             delete(hFig); %
             return;

@@ -8,11 +8,11 @@
 % 
 % %fileName = num2str(filel(c,5))
 %     
-% cd('/Volumes/EPILEPSY/BF/Data folders/20150715-152219');
+% cd('/Volumes/EPILEPSY/BF/Data folders/20151002-113434');
 % merged_matfile = [];
 % fileList_resampled = swa_getFiles(pwd,'_resampled_200Hz.mat');
 % data_resampled_merged = [];
-% for i_resampledfile = 1:size(fileList_resampled,1)
+% for i_resampledfile = 51:size(fileList_resampled,1)
 %    filename_resampled = fileList_resampled{i_resampledfile};
 %    load(fileList_resampled{i_resampledfile});
 %    data_resampled_merged = [data_resampled_merged; data_resampled]; 
@@ -24,23 +24,23 @@
 % %save([filename_resampled(:,1:end-25) '_200Hz_resampled_merged.mat'],...
 % %    'merged_matfile','header_ns5','headerinfo', '-mat', '-v7.5');
 % 
-% patient = 'Patient_3';
-% night = 'Night_1_2';
+% patient = 'Patient_6';
+% night = 'Night_18';
 % 
 % cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night]);
 % 
 % save([patient,'_',night,'_200Hz_resampled.mat'],...
 %     'merged_matfile','header_ns3','headerinfo', '-mat', '-v7.3');
 % disp('Files Merged');
-% % % 
+% % 
 
 
 %% Merge files with different file names and same night
 % 
 clear;
 clc;
-patient = 'Patient_3';
-night = 'Night_1';
+patient = 'Patient_9';
+night = 'Night_3';
 
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'/']);
 
@@ -54,7 +54,7 @@ file2 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',
 % file7 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_7/',patient,'_',night,'_7_200Hz_resampled.mat']);
 % file8 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_8/',patient,'_',night,'_8_200Hz_resampled.mat']);
 
-merged_matfile = [file1.merged_matfile ; file2.merged_matfile];%file3.merged_matfile ];%file4.merged_matfile];%...
+merged_matfile = [file1.merged_matfile ; file2.merged_matfile];%file3.merged_matfile;file4.merged_matfile];%...
     %file5.merged_matfile ];% file7.merged_matfile ;file8.merged_matfile];
 header_ns3 = file1.header_ns3;
 

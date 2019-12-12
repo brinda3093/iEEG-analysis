@@ -4,8 +4,8 @@
 %for p = 7%:length(x.Patient)
 
 
-Patient = 'Patient_8' %char(x.Patient(p));
-Night = 'Night_7'%char(x.Night(p));
+Patient = 'Patient_1' %char(x.Patient(p));
+Night = 'Night_1'%char(x.Night(p));
 
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
 load([Patient,'_',Night,'_200Hz_resampled.mat']);
