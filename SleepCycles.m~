@@ -5,26 +5,24 @@
 
 eeglab;
 
-Patient = 'Patient_1';
-Night = 'Night_1';
-pID = 'P1';
-nID = 'N1';
+Patient = 'Patient_2';
+Night = 'Night_3';
+pID = 'P2';
+nID = 'N3';
 
 filename = [pID,nID];
-
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/']);
 load([Patient,'/',Night,'/',Patient,'_',Night,'_Transpose.mat']);
 EEG = pop_importdata([Patient,'/',Night,'/',Patient,'_',Night,'_Transpose.mat']);
 fs = 200;
 EEG.data = EEGdata;
 EEG = pop_editset(EEG, 'srate',fs); 
 
-
-
 EEG.filename = filename;
 
 %% Step 1.2
 % Filtering the data 
-
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/']);
 
 LOW_CUTOFF = 0.5;
 HIGH_CUTOFF = [];
@@ -35,8 +33,8 @@ EEG1 = pop_eegfiltnew(EEG, LOW_CUTOFF, HIGH_CUTOFF, [], 0, [], 0);
 eegplot(EEG1.data,...
   'srate', EEG1.srate,...
   'eloc_file', EEG1.chanlocs,...
-  'spacing', 110,...
-  'winlength', 120,...
+  'spacing', 10000,...
+  'winlength', 300,...
   'dispchans', EEG1.nbchan,...
   'command', 'disp(''No data rejected. Use pop_select for this.'')',...
   'butlabel', 'MARK', ...
@@ -86,50 +84,31 @@ end
 save(['Db_',pID,nID,'.mat'],'Db');
 
 %% Select the valid night for sleep from the Delta Beta ratio on the EEGLAB
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
 
 eeglab;
+type = 'sleep';
+sleep_epoch = select_for_analysis(EEG, pID, nID, type, Db);
 
-EEG = pop_importdata(['Db_',pID,nID,'.mat']);
-EEG.srate = 200;
-EEG.data = Db;
+%% Calculate the wake cycles before and after sleep
 
-eegplot(EEG.data,...
-  'srate', EEG.srate,...
-  'eloc_file', EEG.chanlocs,...
-  'spacing', 110,...
-  'winlength', 120,...
-  'dispchans', EEG.nbchan,...
-  'command', 'disp(''No data rejected. Use pop_select for this.'')',...
-  'butlabel', 'MARK', ...
-  'events', EEG.event);
+eeglab;
+type = 'WakeBS';
+wakeBS_epoch = select_for_analysis(EEG, pID, nID, type, Db);
+
+%% Calculate the wake cycles after sleep
+
+eeglab;
+type = 'WakeAS';
+wakeAS_epoch = select_for_analysis(EEG, pID, nID, type, Db);
 
 
-EEG = epi_log(@pop_select, EEG, 'nopoint', TMPREJ(:,1:2));
-EEG.removed_stretches = TMPREJ(:,1:2);
 
-DBVals_sleep = EEG.data;
-
-save(['DBVals_sleep',pID,nID,'.mat'],'DBVals_sleep'); %
-%% Finding the epochs to be considered for the FFT Calculation
-
-Db_sin = single(Db);
-
-sleep_epoch = [];
-
-for k = 1:length(DBVals_sleep)
-    for l = 1:length(Db_sin)
-        if Db_sin(l) == DBVals_sleep(k)
-            sleep_epoch = [sleep_epoch, l];
-        end
-    end
-end
-
-%% Data for FFT Calculation
-
+%%  Data for FFT calculation
 load([pID,nID,'_data_assess_sleep.mat']);
 
 Data = EEG.data;
-data_fft = Data(:,sleep_epoch(3)*30*200:sleep_epoch(end)*30*200);
+data_fft = Data(:,sleep_epoch(1)*30*200:sleep_epoch(end)*30*200);
 
 save([pID,nID,'sleep_data_fft.mat'],'data_fft');
 
@@ -140,6 +119,40 @@ EEG.srate = 200; %Sampling rate
 
 
 EEG = pop_saveset(EEG, 'filename', [pID,nID,'_sleepData']);
+%% Data WakeBS for FFT Calculation
+
+load([pID,nID,'_data_assess_sleep.mat']);
+
+Data = EEG.data;
+data_fft = Data(:,wakeBS_epoch(1)*30*200:wakeBS_epoch(end)*30*200);
+
+save([pID,nID,'wakeBS_data_fft.mat'],'data_fft');
+
+eeglab;
+EEG = pop_importdata([pID,nID,'wakeBS_data_fft.mat']);
+EEG.data = data_fft;
+EEG.srate = 200; %Sampling rate
+
+
+EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeBSData']);
+
+
+
+%%
+load([pID,nID,'_data_assess_sleep.mat']);
+
+Data = EEG.data;
+data_fft = Data(:,wakeAS_epoch(1)*30*200:wakeAS_epoch(end)*30*200);
+
+save([pID,nID,'wakeAS_data_fft.mat'],'data_fft');
+
+eeglab;
+EEG = pop_importdata([pID,nID,'wakeAS_data_fft.mat']);
+EEG.data = data_fft;
+EEG.srate = 200; %Sampling rate
+
+
+EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeASData']);
 %%
 % FFT time course - overview
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -213,7 +226,7 @@ good_epochs_thresholds = calculate_data_saved_thresholds(fft_bands          , ..
     options);
 
 % "plot the spectra"
-Spectra_Plotter(fft_all, good_epochs, options);
+Spectra_Plotter(fft_all,good_epochs, options);
 
 save([filtered_file(1:end-4) '_fft_wholedata.mat'], 'fft_all', 'fft_bands',... %'fft_HF_slided', 'fft_SWA_slided', 
     'fft_HF_threshold', 'fft_SWA_threshold', 'options', 'freq_range',... %'good_epochs' ,

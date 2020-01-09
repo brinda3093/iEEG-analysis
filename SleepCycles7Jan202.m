@@ -1,4 +1,23 @@
-%% Assessing Sleep, Selecting Cycles to be analyzed, Calculating FFT
+%% Assessing Sleep, Selecting Cycles to be analyzed, Calculating FFT for Analysis
+% Last Edited: 1-8-2020; Brinda Sevak
+
+% The following script can be used to Assess the sleep which helps classify
+% the given night of data based on the output of the classifier after the
+% bad channels and bad stretches of the data are removed. Further we can
+% select the sections of the night: 
+% a) Sleep 
+% b) Wake Before Sleep & 
+% c) Wake After Sleep 
+% using EEGLAB which are to be used for further analysis and calculations 
+
+% The script is divided into the following steps
+% Step 1.1
+% Step 1.2
+% Step 1.3
+% Step 2.1
+% Step 2.2
+% Step 2.3
+
  
 %% Step 1.1
 % Import the data to remove the bad sections of the data
@@ -29,16 +48,22 @@ HIGH_CUTOFF = [];
 
 EEG1 = pop_eegfiltnew(EEG, LOW_CUTOFF, HIGH_CUTOFF, [], 0, [], 0);
 
+EEG1 = csc_eeg_plotter(EEG1);
+
+EEG1.badchannels = EEG1.csc_hidden_channels;
+EEG1 = pop_select(EEG1, 'nochannel', EEG1.badchannels); % remove
+
 %
 eegplot(EEG1.data,...
   'srate', EEG1.srate,...
   'eloc_file', EEG1.chanlocs,...
-  'spacing', 10000,...
+  'spacing', 5000,...
   'winlength', 300,...
   'dispchans', EEG1.nbchan,...
   'command', 'disp(''No data rejected. Use pop_select for this.'')',...
   'butlabel', 'MARK', ...
   'events', EEG1.event);
+%% Step 1.3 - 
 
 EEG = epi_log(@pop_select, EEG1, 'nopoint', TMPREJ(:,1:2));
 
@@ -58,7 +83,7 @@ cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/',
 save([pID,nID,'_data.mat'],'Data','El_number','El_name','fs','-v7.3');
 
 
-%% Step 2
+%% Step 2.1 - Classifying into sleep-wake based on Delta-Beta ratio
 
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
 global subject_id z;
@@ -82,88 +107,80 @@ for i = 1:length(Db)
 end
 
 save(['Db_',pID,nID,'.mat'],'Db');
+disp('Move to step 2.2 to select the section of wake or sleep you want to analyze based on the CLassifier output');
 
-%% Select the valid night for sleep from the Delta Beta ratio on the EEGLAB
+%% Step 2.2 Select the valid night for sleep from the Delta Beta ratio on the EEGLAB
+
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
 
-eeglab;
 type = 'sleep';
-DBVals_sleep = select_for_analysis(EEG, pID, nID, type, Db);
+eeglab; 
+    EEG = pop_importdata(['Db_',pID,nID,'.mat']);
+    EEG.srate = 1;
+    EEG.data = Db;
+    EEG.xmax = length(EEG.data);
+    disp('Mark the sleep cycle to be analyzed');
+    eegplot(EEG.data,...
+        'srate', EEG.srate,...
+        'eloc_file', EEG.chanlocs,...
+        'spacing', 110,...
+        'winlength', length(EEG.data),...
+        'dispchans', EEG.nbchan,...
+        'command', 'disp(''No data rejected. Use pop_select for this.'')',...
+        'butlabel', 'MARK', ...
+        'events', EEG.event);
+    waitfor(gcf);
+    
+sleep_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
 
-%% Calculate the wake cycles before and after sleep
+%% Step 2.3 Select the valid wake before sleep from the Delta Beta ratio on the EEGLAB
+% Skip if no data is available
 
 eeglab;
 type = 'WakeBS';
-DBVals_WBS = select_for_analysis(EEG, pID, nID, type, Db);
+EEG = pop_importdata(['Db_',pID,nID,'.mat']);
+    EEG.srate = 1;
+    EEG.data = Db;
+    EEG.xmax = length(EEG.data);
+    disp('Mark the Wake before sleep to be analyzed');
+    eegplot(EEG.data,...
+        'srate', EEG.srate,...
+        'eloc_file', EEG.chanlocs,...
+        'spacing', 110,...
+        'winlength', length(EEG.data),...
+        'dispchans', EEG.nbchan,...
+        'command', 'disp(''No data rejected. Use pop_select for this.'')',...
+        'butlabel', 'MARK', ...
+        'events', EEG.event);
+    waitfor(gcf);
 
-%% Calculate the wake cycles after sleep
+wakeBS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
+
+
+%% Step 2.4 Select the valid wake after sleep from the Delta Beta ratio on the EEGLAB
+% Skip if no data is available
 
 eeglab;
-load(['Db_',pID,nID,'.mat']);
 EEG = pop_importdata(['Db_',pID,nID,'.mat']);
-EEG.srate = 1;
-EEG.data = Db;
-EEG.xmax = length(EEG.data);
-disp('Select the section of wake to be analysed after sleep');
-eegplot(EEG.data,...
-  'srate', EEG.srate,...
-  'eloc_file', EEG.chanlocs,...
-  'spacing', 110,...
-  'winlength', length(EEG.data),...
-  'dispchans', EEG.nbchan,...
-  'command', 'disp(''No data rejected. Use pop_select for this.'')',...
-  'butlabel', 'MARK', ...
-  'events', EEG.event);
+    EEG.srate = 1;
+    EEG.data = Db;
+    EEG.xmax = length(EEG.data);
+    disp('Mark the Wake after sleep to be analyzed');
+    eegplot(EEG.data,...
+        'srate', EEG.srate,...
+        'eloc_file', EEG.chanlocs,...
+        'spacing', 110,...
+        'winlength', length(EEG.data),...
+        'dispchans', EEG.nbchan,...
+        'command', 'disp(''No data rejected. Use pop_select for this.'')',...
+        'butlabel', 'MARK', ...
+        'events', EEG.event);
+    waitfor(gcf);
 
-EEG.trials = 1;
-EEG.nbchan = length(EEG.data(:,1));
-EEG = epi_log(@pop_select, EEG, 'point', TMPREJ(:,1:2));
+wakeAS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
+%% Step 2.6 Saving the sleep, wakeBS and wakeAS data for FFT Calculations
+%  Sleep Data for FFT calculation
 
-EEG.removed_stretches = TMPREJ(:,1:2);
-
-DBVals_WAS= EEG.data; % Wake after sleep
-
-save(['DBVals_WAS',pID,nID,'.mat'],'DBVals_WAS'); %
-
-
-%% Finding the epochs to be considered for the FFT Calculation
-
-Db_sin = single(Db);
-
-sleep_epoch = [];
-
-% Sleep Epoch
-for k = 1:length(DBVals_sleep)
-    for l = 1:length(Db_sin)
-        if Db_sin(l) == DBVals_sleep(k)
-            sleep_epoch = [sleep_epoch, l];
-        end
-    end
-end
-
-% Wake before sleep epoch
-wakeBS_epoch = [];
-
-for k = 1:length(DBVals_WBS)
-    for l = 1:length(Db_sin)
-        if Db_sin(l) == DBVals_WBS(k)
-            wakeBS_epoch= [wakeBS_epoch, l];
-        end
-    end
-end
-
-% Wake before sleep epoch
-wakeAS_epoch = [];
-
-for k = 1:length(DBVals_WAS)
-    for l = 1:length(Db_sin)
-        if Db_sin(l) == DBVals_WAS(k)
-            wakeAS_epoch= [wakeAS_epoch, l];
-        end
-    end
-end
-
-%%  Data for FFT calculation
 load([pID,nID,'_data_assess_sleep.mat']);
 
 Data = EEG.data;
@@ -176,9 +193,9 @@ EEG = pop_importdata([pID,nID,'sleep_data_fft.mat']);
 EEG.data = data_fft;
 EEG.srate = 200; %Sampling rate
 
-
 EEG = pop_saveset(EEG, 'filename', [pID,nID,'_sleepData']);
-%% Data WakeBS for FFT Calculation
+
+%% WakeBS Data for FFT Calculation
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
@@ -192,12 +209,10 @@ EEG = pop_importdata([pID,nID,'wakeBS_data_fft.mat']);
 EEG.data = data_fft;
 EEG.srate = 200; %Sampling rate
 
-
 EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeBSData']);
 
+%% Wake AS Data for FFT Calculation
 
-
-%%
 load([pID,nID,'_data_assess_sleep.mat']);
 
 Data = EEG.data;
@@ -210,8 +225,8 @@ EEG = pop_importdata([pID,nID,'wakeAS_data_fft.mat']);
 EEG.data = data_fft;
 EEG.srate = 200; %Sampling rate
 
-
 EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeASData']);
+
 %%
 % FFT time course - overview
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -242,7 +257,7 @@ options = struct(...
 
 % "Calculate bands' ffts".
 % Stores output variables and input options in specified file.
-[fft_bands, freq_bands, freq] = csc_calculate_freq_bands_last(fft_all, freq_range, options);
+[fft_bands, freq_bands, freq] = csc_calculate_freq_bands_last_modified(fft_all, freq_range, options);
 % freq_bands = Internally defined bands, presumably not data-dependent.
 % freq = strings with common names (e.g. "theta") for each of these bands.
 % fft_bands = power in each of these bands, in each channel, at each time

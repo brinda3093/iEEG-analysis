@@ -40,18 +40,18 @@
 clear;
 clc;
 patient = 'Patient_9';
-night = 'Night_3';
+night = 'Night_10';
 
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'/']);
 
 % Loading the .mat files for the same day different names
 file1 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_1/',patient,'_',night,'_1_200Hz_resampled.mat']);
 file2 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_2/',patient,'_',night,'_2_200Hz_resampled.mat']);
-%file3 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_3/',patient,'_',night,'_3_200Hz_resampled.mat']);
+file3 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_3/',patient,'_',night,'_3_200Hz_resampled.mat']);
 %file4 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_4/',patient,'_',night,'_4_200Hz_resampled.mat']);
 %file5 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_5/',patient,'_',night,'_5_200Hz_resampled.mat']);
-% %file6 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_6/',patient,'_',night,'_6_200Hz_resampled.mat']);
-% file7 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_7/',patient,'_',night,'_7_200Hz_resampled.mat']);
+%file6 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_6/',patient,'_',night,'_6_200Hz_resampled.mat']);
+%file7 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_7/',patient,'_',night,'_7_200Hz_resampled.mat']);
 % file8 = load(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',patient,'/',night,'_8/',patient,'_',night,'_8_200Hz_resampled.mat']);
 
 merged_matfile = [file1.merged_matfile ; file2.merged_matfile];%file3.merged_matfile;file4.merged_matfile];%...
