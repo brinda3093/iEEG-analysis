@@ -1,5 +1,4 @@
 %% Assessing Sleep, Selecting Cycles to be analyzed, Calculating FFT for Analysis
-
 % Last Edited: 1-8-2020; Brinda Sevak
 
 % The following script can be used to Assess the sleep which helps classify
@@ -27,15 +26,9 @@
 % further select the sections of the wake before sleep from the night to be analyzed.
 % Step 2.4  - Using the Delta-Beta Ratio obtained from the classifier to
 % further select the sections of the wake after sleep from the night to be analyzed.
-% Step 2.5 -  Saving the sleep, wakeBS and wakeAS data for FFT Calculations
-% Step 3 - Calculate the FFT power for the different bands for the different sections of the night.
+% Step 3 - 
 
-% Repeat the step 3 for each section of the night by selecting the
-% appropriate set file
-
-% Functions required with the script are data_epochs.m, Assess_the_sleep_NST.m eeglab
-% The following script saves the .mat files of the FFT data in the end
-% for each electrode which can be used for the analysis. 
+ 
 %% Step 1.1
 % Import the data to remove the bad sections of the data
 
@@ -245,13 +238,10 @@ EEG.srate = 200; %Sampling rate
 EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeASData']);
 
 %% Step 3 - Calculate the FFT power for the different bands for the different sections of the night.
-% Repeat the step 3 for each section of the night by selecting the
-% appropriate set file
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Repeat the step 3 for 
 % FFT time course - overview
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% Repeat this part of the script for each of the type of data
 EEG_fft = pop_loadset();
 filtered_file = EEG_fft.filename;
 
@@ -291,8 +281,10 @@ save([filtered_file(1:end-4) '_fft_wholedata.mat'], 'fft_all', 'fft_bands','fft_
     'options', 'freq_range',... %'good_epochs' ,
     'filtered_file' , '-mat', '-v7.3');
 
-disp('FFT data saved');
+disp('Data Saved');
 
+%% Step 4 - Relationship between SWA between different sections of the night
+%% Step 4.1 Between 1st Hr and last Hr of sleep or 1st half and last half of sleep
 
 
 
