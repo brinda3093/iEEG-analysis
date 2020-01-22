@@ -38,13 +38,14 @@
 % for each electrode which can be used for the analysis. 
 %% Step 1.1
 % Import the data to remove the bad sections of the data
+clear;
 
 eeglab;
 
-Patient = 'Patient_2';
-Night = 'Night_3';
-pID = 'P2';
-nID = 'N3';
+Patient = 'Patient_6';
+Night = 'Night_5';
+pID = 'P6';
+nID = 'N5';
 
 filename = [pID,nID];
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/']);
@@ -102,7 +103,7 @@ save([pID,nID,'_data.mat'],'Data','El_number','El_name','fs','-v7.3');
 
 %% Step 2.1 - Classifying into sleep-wake based on Delta-Beta ratio
 
-cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/'])
+cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/']);
 global subject_id z;
 subject_id  = {[pID,nID]};
 z = 1;
@@ -200,8 +201,9 @@ wakeAS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
-Data = EEG.data;
-data_fft = Data(:,sleep_epoch(1)*30*200:sleep_epoch(end)*30*200);
+Data = EEG1.data;
+last = sleep_epoch(end);
+data_fft = Data(:,sleep_epoch(1)*30*200:last*30*200);
 
 save([pID,nID,'sleep_data_fft.mat'],'data_fft');
 
@@ -216,8 +218,9 @@ EEG = pop_saveset(EEG, 'filename', [pID,nID,'_sleepData']);
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
-Data = EEG.data;
-data_fft = Data(:,wakeBS_epoch(1)*30*200:wakeBS_epoch(end)*30*200);
+Data = EEG1.data;
+last = wakeBS_epoch(end);
+data_fft = Data(:,wakeBS_epoch(1)*30*200:last*30*200);
 
 save([pID,nID,'wakeBS_data_fft.mat'],'data_fft');
 
@@ -232,8 +235,9 @@ EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeBSData']);
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
-Data = EEG.data;
-data_fft = Data(:,wakeAS_epoch(1)*30*200:wakeAS_epoch(end)*30*200);
+Data = EEG1.data;
+last = wakeAS_epoch(end);
+data_fft = Data(:,wakeAS_epoch(1)*30*200:last*30*200);
 
 save([pID,nID,'wakeAS_data_fft.mat'],'data_fft');
 

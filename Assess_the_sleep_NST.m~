@@ -325,7 +325,7 @@ all_ha = findobj(hFig  , 'type', 'axes', 'tag', '' );
 for j = 1:length(all_ha)
     all_ha(j).YGrid = 'on'; % turn on Y-Grids
 end
-saveas(hFig , 'FullNight.png','png');
+dest = [cd filesep subject_id{z} filesep];
 saveas(hFig , [dest,'\FullNight_',subject_id{z},'.png'],'png');
 close(hFig);
 % wait till user closes the figure
