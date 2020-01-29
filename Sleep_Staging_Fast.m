@@ -1,6 +1,10 @@
 % Script for analyzing the night faster
 
 clear;
+% patient = 'Patient_9';
+% night = 'Night_10';
+% pID = 'P9';
+% nID = 'N10';
 
 eeglab;
 
@@ -35,11 +39,11 @@ Data = mean(Data1,1);
 El_number = 1;
 El_name{1,1} = '1'; 
 
-fs = 200;
-x = 'trialFile';
-
+fs = EEG1.srate;
+%x = [patient,'_',night];
+x = 'trialIntracranial';
 % Create a directory in any of the working folders
-mkdir('/Users/bsevak/Documents/',x);
+mkdir(['/Users/bsevak/Documents/'],x);
 
 % Change the directory according to the folder created
 cd(['/Users/bsevak/Documents/',x]);
@@ -48,7 +52,7 @@ save([x,'_data.mat'],'Data','El_number','El_name','fs','-v7.3');
 % Directory minus the final folder (here /trialFile)
 cd('/Users/bsevak/Documents/');
 global subject_id z;
-subject_id  = {'trialFile'};
+subject_id  = {x};
 z = 1;
 
 Assess_the_sleep_NST();
