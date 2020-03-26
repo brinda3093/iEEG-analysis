@@ -56,3 +56,20 @@ subject_id  = {x};
 z = 1;
 
 Assess_the_sleep_NST();
+
+global Db;
+db_sleep = [];
+db_sleep_x = [];
+db_wake = [];
+db_wake_x = [];
+for i = 1:length(Db)
+    if (Db(i) > prctile(Db,90))
+        db_sleep = [db_sleep Db(i)];
+        db_sleep_x = [db_sleep_x i];
+    elseif (Db(i) < prctile(Db, 5))
+        db_wake = [db_wake Db(i)];
+        db_wake_x = [db_wake_x i];
+    end
+end
+
+save(['Db_',x,'.mat'],'Db');

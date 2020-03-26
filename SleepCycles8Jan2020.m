@@ -62,7 +62,7 @@ EEG.filename = filename;
 cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/']);
 
 LOW_CUTOFF = 0.5;
-HIGH_CUTOFF = [];
+HIGH_CUTOFF = 40;
 
 EEG1 = pop_eegfiltnew(EEG, LOW_CUTOFF, HIGH_CUTOFF, [], 0, [], 0);
 
@@ -133,7 +133,7 @@ cd(['/Users/bsevak/Documents/Merged Data_BF/Merged_Data/',Patient,'/',Night,'/']
 
 type = 'sleep';
 eeglab; 
-    EEG = pop_importdata(['Db_',pID,nID,'.mat']);
+    EEG = pop_importdata();%['Db_',pID,nID,'.mat']);
     EEG.srate = 1;
     EEG.data = Db;
     EEG.xmax = length(EEG.data);
@@ -149,14 +149,15 @@ eeglab;
         'events', EEG.event);
     waitfor(gcf);
     
-sleep_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
-
+%sleep_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
+    
+sleep_epoch = data_epoch(EEG, x, type, Db, TMPREJ);
 %% Step 2.3 Select the valid wake before sleep from the Delta Beta ratio on the EEGLAB
 % Skip if no data is available
 
 eeglab;
 type = 'WakeBS';
-EEG = pop_importdata(['Db_',pID,nID,'.mat']);
+EEG = pop_importdata(['Db_',x,'.mat']);
     EEG.srate = 1;
     EEG.data = Db;
     EEG.xmax = length(EEG.data);
@@ -172,14 +173,15 @@ EEG = pop_importdata(['Db_',pID,nID,'.mat']);
         'events', EEG.event);
     waitfor(gcf);
 
-wakeBS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
-
+%wakeBS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
+wakeBS_epoch = data_epoch(EEG, x, type, Db, TMPREJ);
 
 %% Step 2.4 Select the valid wake after sleep from the Delta Beta ratio on the EEGLAB
 % Skip if no data is available
 
 eeglab;
-EEG = pop_importdata(['Db_',pID,nID,'.mat']);
+type = 'WakeAS';
+EEG = pop_importdata(['Db_',x,'.mat']);
     EEG.srate = 1;
     EEG.data = Db;
     EEG.xmax = length(EEG.data);
@@ -195,59 +197,67 @@ EEG = pop_importdata(['Db_',pID,nID,'.mat']);
         'events', EEG.event);
     waitfor(gcf);
 
-wakeAS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
+%wakeAS_epoch = data_epoch(EEG, pID, nID, type, Db, TMPREJ);
+wakeAS_epoch = data_epoch(EEG,x, type, Db, TMPREJ);
 %% Step 2.5 Saving the sleep, wakeBS and wakeAS data for FFT Calculations
 %  Sleep Data for FFT calculation
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
-Data = EEG1.data;
+%Data = EEG1.data;
+Data = EEG_fft.data;
 last = sleep_epoch(end);
 data_fft = Data(:,sleep_epoch(1)*30*200:last*30*200);
 
-save([pID,nID,'sleep_data_fft.mat'],'data_fft');
+%save([pID,nID,'sleep_data_fft.mat'],'data_fft');
+save([x,'sleep_data_fft.mat'],'data_fft');
 
 eeglab;
-EEG = pop_importdata([pID,nID,'sleep_data_fft.mat']);
+%EEG = pop_importdata([pID,nID,'sleep_data_fft.mat']);
+EEG = pop_importdata([x,'sleep_data_fft.mat']);
 EEG.data = data_fft;
-EEG.srate = 200; %Sampling rate
+EEG.srate = 400; %Sampling rate
 
-EEG = pop_saveset(EEG, 'filename', [pID,nID,'_sleepData']);
-
+%EEG = pop_saveset(EEG, 'filename', [pID,nID,'_sleepData']);
+EEG = pop_saveset(EEG, 'filename', [x,'_sleepData']);
 %% WakeBS Data for FFT Calculation
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
-Data = EEG1.data;
+%Data = EEG1.data;
+Data = EEG_fft.data;
 last = wakeBS_epoch(end);
 data_fft = Data(:,wakeBS_epoch(1)*30*200:last*30*200);
 
-save([pID,nID,'wakeBS_data_fft.mat'],'data_fft');
+%save([pID,nID,'wakeBS_data_fft.mat'],'data_fft');
+save([x,'wakeBS_data_fft.mat'],'data_fft');
 
 eeglab;
-EEG = pop_importdata([pID,nID,'wakeBS_data_fft.mat']);
+EEG = pop_importdata([x,'wakeBS_data_fft.mat']);
 EEG.data = data_fft;
-EEG.srate = 200; %Sampling rate
+EEG.srate = 400; %Sampling rate
 
-EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeBSData']);
-
+%EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeBSData']);
+EEG = pop_saveset(EEG, 'filename', [x,'_wakeBSData']);
 %% Wake AS Data for FFT Calculation
 
 load([pID,nID,'_data_assess_sleep.mat']);
 
-Data = EEG1.data;
+%Data = EEG1.data;
+Data = EEG_fft.data;
 last = wakeAS_epoch(end);
 data_fft = Data(:,wakeAS_epoch(1)*30*200:last*30*200);
 
-save([pID,nID,'wakeAS_data_fft.mat'],'data_fft');
+%save([pID,nID,'wakeAS_data_fft.mat'],'data_fft');
+save([x,'wakeAS_data_fft.mat'],'data_fft');
 
 eeglab;
-EEG = pop_importdata([pID,nID,'wakeAS_data_fft.mat']);
+EEG = pop_importdata([x,'wakeAS_data_fft.mat']);
 EEG.data = data_fft;
-EEG.srate = 200; %Sampling rate
+EEG.srate = 400; %Sampling rate
 
-EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeASData']);
-
+%EEG = pop_saveset(EEG, 'filename', [pID,nID,'_wakeASData']);
+EEG = pop_saveset(EEG, 'filename', [x,'_wakeASData']);
 %% Step 3 - Calculate the FFT power for the different bands for the different sections of the night.
 % Repeat the step 3 for each section of the night by selecting the
 % appropriate set file
@@ -290,8 +300,10 @@ options = struct(...
 
 fft_SWA_2_4 = fft_bands(:,:,1);
 fft_SWA_4_8 = fft_bands(:,:,2);
+fft_Spindles = fft_bands(:,:,5);
+fft_SWA_DB = fft_bands(:,:,3)./fft_bands(:,:,6);
 
-save([filtered_file(1:end-4) '_fft_wholedata.mat'], 'fft_all', 'fft_bands','fft_SWA_2_4','fft_SWA_4_8',... %'fft_HF_slided', 'fft_SWA_slided', 
+save([filtered_file(1:end-4) '_fft_wholedata.mat'], 'fft_all', 'fft_bands','fft_SWA_2_4','fft_SWA_4_8','fft_Spindles','fft_SWA_DB',... %'fft_HF_slided', 'fft_SWA_slided', 
     'options', 'freq_range',... %'good_epochs' ,
     'filtered_file' , '-mat', '-v7.3');
 

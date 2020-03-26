@@ -1,4 +1,4 @@
-function [select_epoch, EEG] = data_epoch(EEG, pID, nID, type, Db, TMPREJ)
+function [select_epoch, EEG] = data_epoch(EEG, x, type, Db, TMPREJ)
     EEG.trials = 1;
     EEG.nbchan = length(EEG.data(:,1));
     EEG = epi_log(@pop_select, EEG, 'point', TMPREJ(:,1:2));
@@ -6,7 +6,7 @@ function [select_epoch, EEG] = data_epoch(EEG, pID, nID, type, Db, TMPREJ)
     EEG.removed_stretches = TMPREJ(:,1:2);
 
     DBVals = EEG.data;
-    save(['DBVals_',type,pID,nID,'.mat'],'DBVals'); 
+    save(['DBVals_',type,x,'.mat'],'DBVals'); 
     
     %%  Selecting the data from the epochs
     
