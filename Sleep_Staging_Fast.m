@@ -73,3 +73,5 @@ for i = 1:length(Db)
 end
 
 save(['Db_',x,'.mat'],'Db');
+figure;
+plot(Db);
